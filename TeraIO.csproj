@@ -10,6 +10,8 @@
     <Folder Include="Compression\" />
     <Folder Include="Network\" />
     <Folder Include="Minecraft\" />
+    <Folder Include="Data\" />
+    <Folder Include=".git\" />
   </ItemGroup>
 
 </Project>
