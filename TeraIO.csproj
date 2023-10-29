@@ -11,7 +11,7 @@
     <Folder Include="Network\" />
     <Folder Include="Minecraft\" />
     <Folder Include="Data\" />
-    <Folder Include=".git\" />
+    <Folder Include=".github\" />
   </ItemGroup>
 
 </Project>
