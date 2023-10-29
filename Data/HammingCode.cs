@@ -219,6 +219,6 @@ namespace TeraIO.Data
 
             // 将字符列表中的所有字符连接在一起，形成一个完整的Base64编码字符串
             return new string(chars.ToArray());
-        }=
+        }
     }
 }
