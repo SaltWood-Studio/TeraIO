@@ -1,38 +1,49 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <Title>TeraIO</Title>
-    <PackageId>SaltWood.$(AssemblyName)</PackageId>
-    <Authors>SaltWood</Authors>
-    <RepositoryUrl>https://github.com/SALTWOOD/TeraIO</RepositoryUrl>
-    <PackageIcon>TeraIO.png</PackageIcon>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-	<Version>1.0.0-alpha</Version>
-	<LangVersion>default</LangVersion>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Title>TeraIO</Title>
+		<PackageId>SaltWood.$(AssemblyName)</PackageId>
+		<Authors>SaltWood</Authors>
+		<RepositoryUrl>https://github.com/SALTWOOD/TeraIO</RepositoryUrl>
+		<PackageIcon>TeraIO.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>1.0.0-alpha</Version>
+		<LangVersion>default</LangVersion>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Compression\" />
-    <Folder Include="Network\" />
-    <Folder Include="Minecraft\" />
-    <Folder Include="Data\" />
-    <Folder Include=".github\" />
-  </ItemGroup>
+	<ItemGroup>
+	  <Compile Remove="TeraIO.Test\**" />
+	  <EmbeddedResource Remove="TeraIO.Test\**" />
+	  <None Remove="TeraIO.Test\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Update="README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Update="TeraIO.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="Compression\" />
+		<Folder Include="Network\" />
+		<Folder Include="Minecraft\" />
+		<Folder Include="Data\" />
+		<Folder Include=".github\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="LICENSE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Update="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Update="TeraIO.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 
 </Project>
