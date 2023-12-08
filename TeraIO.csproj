@@ -4,6 +4,14 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Title>TeraIO</Title>
+    <PackageId>SaltWood.$(AssemblyName)</PackageId>
+    <Authors>SaltWood</Authors>
+    <RepositoryUrl>https://github.com/SALTWOOD/TeraIO</RepositoryUrl>
+    <PackageIcon>TeraIO.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<Version>1.0.0-alpha</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +20,17 @@
     <Folder Include="Minecraft\" />
     <Folder Include="Data\" />
     <Folder Include=".github\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="TeraIO.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
