@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using TeraIO;
 using TeraIO.Data;
+using TeraIO.Extension;
 
 namespace TeraIO.Test
 {
@@ -8,36 +9,24 @@ namespace TeraIO.Test
     {
         static void Main(string[] args)
         {
-            byte[] data = File.ReadAllBytes("P:/NikGapps-tiny-arm64-11-20220324-signed.zip");
+            byte[] data = File.ReadAllBytes("P:/WePE64_V2.2.iso.txt");
             List<bool> bools = TeraHash.ByteArrayToBoolList(data);
-            HammingCode hammingCode = new HammingCode(bools);
-            string i = ToString(hammingCode.hammingCode);
+            ErrorCorrector verificator = new ErrorCorrector(bools);
+            string i = ToString(verificator.verificationCode);
             Console.WriteLine(i);
-            Console.WriteLine(hammingCode);
+            Console.WriteLine(verificator);
+            Console.WriteLine(verificator.Check(bools));
         }
 
-        public static string ToString(List<bool[,]> args)
+        public static string ToString(IList<bool> args)
         {
             string result = "";
-            foreach (bool[,] i in args)
+            foreach (bool j in args)
             {
-                foreach (bool j in i)
-                {
-                    result += j ? "1" : "0";
-                }
-                result += " ";
+                result += j ? "1" : "0";
             }
+            result += " ";
             return result;
-        }
-
-        public static string ToString(List<bool> args)
-        {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < args.Count; i++)
-            {
-                sb.Append(args[i] ? 1 : 0);
-            }
-            return sb.ToString();
         }
     }
 }
