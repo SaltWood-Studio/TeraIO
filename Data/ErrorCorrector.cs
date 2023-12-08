@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TeraIO.Extension;
 
 namespace TeraIO.Data
 {
@@ -15,79 +16,107 @@ namespace TeraIO.Data
     public class ErrorCorrector
     {
         // 输入的原始数据
-        private IList<bool> data;
+        //private IList<bool> data;
+        private BitArray data;
+        // 生成的校验码
+        public BitArray verificationCode;
 
-        // 生成的汉明码
-        public IList<bool> verificationCode;
-
-        // 构造函数，接收一个IList<bool>作为输入数据
+        /// <summary>
+        /// 构造函数，接收一个 IList<bool> 作为输入数据
+        /// </summary>
         public ErrorCorrector(IList<bool> data)
+        {
+            this.data = new BitArray(BoolListToByteArray(data));
+            this.verificationCode = GenerateErrorCorrector(this.data);
+        }
+
+        /// <summary>
+        /// 构造函数，接收一个 IList<byte> 作为输入数据
+        /// </summary>
+        public ErrorCorrector(IList<byte> data)
+        {
+            this.data = new BitArray(data.ToArray());
+            this.verificationCode = GenerateErrorCorrector(this.data);
+        }
+
+        /// <summary>
+        /// 构造函数，接收一个 BitArray 作为输入数据
+        /// </summary>
+        public ErrorCorrector(BitArray data)
         {
             this.data = data;
             this.verificationCode = GenerateErrorCorrector(this.data);
         }
 
-        // 构造函数，接收一个IList<byte>作为输入数据
-        public ErrorCorrector(IList<byte> data)
-        {
-            this.data = ByteArrayToBoolList(data);
-            this.verificationCode = GenerateErrorCorrector(this.data);
-        }
-
         /// <summary>
-        /// 通过一个 <see cref="IList{Boolean}"/> 生成错误校验码
+        /// 通过一个 <see cref="IList{Byte}"/> 生成错误校验码
         /// </summary>
         /// <param name="bools"></param>
         /// <returns></returns>
-        public IList<bool> GenerateErrorCorrector(IList<bool> bools)
+        public BitArray GenerateErrorCorrector(IList<byte> bytes)
+        {
+            BitArray values = new BitArray(bytes.ToArray());
+            return GenerateErrorCorrector(values);
+        }
+
+        // 通过一个
+        public BitArray GenerateErrorCorrector(BitArray values)
         {
             long exponent = (long)Math.Log2(this.data.Count);
-            List<bool> result = new List<bool>();
+            BitArray result = new BitArray(new byte[0]);
             for (int i = 1; i < exponent; i++)
             {
                 bool bit = false;
-                for (int j = 0; j < bools.Count; j++)
+                for (int j = 0; j < values.Count; j++)
                 {
                     if ((j / (long)Math.Pow(2, i)) % 2 != 0)
                     {
-                        Console.WriteLine($"{i}, {j}");
+                        //Console.WriteLine($"{i}, {j}");
                         continue;
                     }
                     else
                     {
-                        bit ^= bools[j];
+                        bool b = values[j];
+                        //b.Dump();
+                        bit ^= b;
                     }
                 }
-                result.Add(bit);
+                result.Length += 1;
+                result[^1] = bit;
             }
             return result;
         }
 
         /// <summary>
-        /// 通过一个 <see cref="IList{Byte}"/> 生成错误校验码
+        /// 检查输入的bytes是否与生成的错误校验码一致
         /// </summary>
-        /// <param name="bytes"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
-        public IList<bool> GenerateErrorCorrector(IList<byte> bytes)
+        public bool Check(IList<byte> data)
         {
-            IList<bool> input = ByteArrayToBoolList(bytes);
-            return GenerateErrorCorrector(input);
+            BitArray result = GenerateErrorCorrector(data);
+            return this.verificationCode.Count == result.Count && this.verificationCode.Xor(result).OfType<bool>().All(e => !e);
         }
 
-        // 检查输入的bools是否与生成的错误校验码一致
-        public bool Check(IList<bool> b)
+        private static byte[] BoolListToByteArray(IList<bool> boolList)
         {
-            var result = GenerateErrorCorrector(b);
-            return this.verificationCode.All(result.Contains) && this.verificationCode.Count == result.Count;
-        }
+            int boolListLength = boolList.Count;
+            byte[] byteArray = new byte[boolListLength / 8 + (boolListLength % 8 > 0 ? 1 : 0)];
 
-        // 检查输入的bytes是否与生成的错误校验码一致
-        public bool Check(IList<byte> b)
-        {
-            var input = ByteArrayToBoolList(b);
-            return Check(input);
-        }
+            for (int i = 0; i < boolListLength; i++)
+            {
+                int boolIndex = i % 8;
+                int byteIndex = i / 8;
 
+                if (boolList[i])
+                {
+                    byteArray[byteIndex] |= (byte)(1 << boolIndex);
+                }
+            }
+
+            return byteArray;
+        }
+        /*
         public static List<bool> ByteArrayToBoolList(IList<byte> byteArray)
         {
             List<bool> boolList = new List<bool>();
@@ -100,7 +129,6 @@ namespace TeraIO.Data
             return boolList;
         }
 
-        /*
         private List<bool> CompleteList()
         {
             List<bool> result = new List<bool>();
