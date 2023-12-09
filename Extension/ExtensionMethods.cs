@@ -22,5 +22,13 @@ namespace TeraIO.Extension
         {
             Console.WriteLine($"[{string.Join(", ", a)}");
         }
+
+        public static void Merge<T>(this ICollection<T> left, IEnumerable<T> right)
+        {
+            foreach (T item in right)
+            {
+                left.Add(item);
+            }
+        }
     }
 }

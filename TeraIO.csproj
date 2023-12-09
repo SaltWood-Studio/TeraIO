@@ -25,9 +25,12 @@
 
 	<ItemGroup>
 		<Folder Include="Compression\" />
-		<Folder Include="Network\" />
 		<Folder Include="Minecraft\" />
 		<Folder Include=".github\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
