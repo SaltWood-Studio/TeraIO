@@ -10,26 +10,16 @@ namespace TeraIO.Test
     {
         static void Main(string[] args)
         {
-            byte[] data = File.ReadAllBytes("P:/WePE64_V2.2.iso.txt");
+            byte[] data = File.ReadAllBytes("");
             ErrorCorrector verificator = new ErrorCorrector(data);
-            string i = ToString(verificator.verificationCode);
-            Console.WriteLine(i);
             Console.WriteLine(verificator);
             Console.WriteLine(verificator.Check(data));
             BitArray bitArray = new BitArray(data);
-            int position = 586;
+            int position = new Random().Next(0, bitArray.Count);
             position.Dump();
             bitArray[position] ^= true;
             bool[] rawdata = bitArray.OfType<bool>().ToArray();
             var fixedData = verificator.Repair(TeraHash.BoolArrayToByteArray(rawdata));
-            using (StreamWriter sw = new("C:/Users/SALTWOOD/Desktop/a.txt"))
-            {
-                sw.BaseStream.Write(TeraHash.BoolArrayToByteArray(rawdata));
-            }
-            using (StreamWriter sw = new("C:/Users/SALTWOOD/Desktop/b.txt"))
-            {
-                sw.BaseStream.Write(fixedData);
-            }
         }
 
         public static string ToString(BitArray args)
