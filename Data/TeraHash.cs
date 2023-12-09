@@ -13,7 +13,7 @@ namespace TeraIO.Data
 
         }
 
-        public static List<bool> ByteArrayToBoolList(byte[] byteArray)
+        public static List<bool> ByteArrayToBoolList(IList<byte> byteArray)
         {
             List<bool> boolList = new List<bool>();
 
@@ -25,22 +25,26 @@ namespace TeraIO.Data
             return boolList;
         }
 
-        public static List<bool[,]> ChunkBools(List<bool> bools)
+        public static byte[] BoolArrayToByteArray(IList<bool> boolArray)
         {
-            List<bool[,]> result = new List<bool[,]>();
-            int count = 0;
-            result.Add(new bool[8, 8]);
-            foreach (bool i in bools)
+            int boolCount = boolArray.Count;
+            if (boolCount % 8 != 0)
             {
-                if (count >= 64)
-                {
-                    result.Add(new bool[8, 8]);
-                    count = 0;
-                }
-                result.Last()[count % 8, count / 8] = i;
-                count++;
+                throw new ArgumentException("bool[]的长度必须是8的倍数（包括0）", nameof(boolArray));
             }
-            return result;
+
+            int byteCount = (boolCount + 7) / 8;
+            byte[] byteArray = new byte[byteCount];
+
+            for (int i = 0; i < boolCount; i++)
+            {
+                byte b = (byte)(boolArray[i] ? 1 : 0);
+                int index = i / 8;
+                int shift = i % 8;
+                byteArray[index] |= (byte)(b << shift);
+            }
+
+            return byteArray;
         }
     }
 }

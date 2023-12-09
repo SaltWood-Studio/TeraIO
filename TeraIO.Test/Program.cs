@@ -16,6 +16,20 @@ namespace TeraIO.Test
             Console.WriteLine(i);
             Console.WriteLine(verificator);
             Console.WriteLine(verificator.Check(data));
+            BitArray bitArray = new BitArray(data);
+            int position = 586;
+            position.Dump();
+            bitArray[position] ^= true;
+            bool[] rawdata = bitArray.OfType<bool>().ToArray();
+            var fixedData = verificator.Repair(TeraHash.BoolArrayToByteArray(rawdata));
+            using (StreamWriter sw = new("C:/Users/SALTWOOD/Desktop/a.txt"))
+            {
+                sw.BaseStream.Write(TeraHash.BoolArrayToByteArray(rawdata));
+            }
+            using (StreamWriter sw = new("C:/Users/SALTWOOD/Desktop/b.txt"))
+            {
+                sw.BaseStream.Write(fixedData);
+            }
         }
 
         public static string ToString(BitArray args)

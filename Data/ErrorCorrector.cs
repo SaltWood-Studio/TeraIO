@@ -20,6 +20,11 @@ namespace TeraIO.Data
         private BitArray data;
         // 生成的校验码
         public BitArray verificationCode;
+        public BitArray VerificationCode
+        {
+            get => (BitArray)this.verificationCode.Clone();
+            private set => this.verificationCode = value;
+        }
 
         /// <summary>
         /// 构造函数，接收一个 IList<bool> 作为输入数据
@@ -62,8 +67,17 @@ namespace TeraIO.Data
         // 通过一个
         public BitArray GenerateErrorCorrector(BitArray values)
         {
-            long exponent = (long)Math.Log2(this.data.Count);
+            long exponent = (long)Math.Ceiling(Math.Log2(this.data.Count));
             BitArray result = new BitArray(new byte[0]);
+            result.Length += 1;
+            foreach (var value in values)
+            {
+                if (value is bool)
+                {
+                    bool boolValue = (bool)value;
+                    result[^1] ^= boolValue;
+                }
+            }
             for (int i = 1; i < exponent; i++)
             {
                 bool bit = false;
@@ -95,7 +109,7 @@ namespace TeraIO.Data
         public bool Check(IList<byte> data)
         {
             BitArray result = GenerateErrorCorrector(data);
-            return this.verificationCode.Count == result.Count && this.verificationCode.Xor(result).OfType<bool>().All(e => !e);
+            return this.VerificationCode.Count == result.Count && this.VerificationCode.Xor(result).OfType<bool>().All(e => !e);
         }
 
         private static byte[] BoolListToByteArray(IList<bool> boolList)
@@ -115,6 +129,38 @@ namespace TeraIO.Data
             }
 
             return byteArray;
+        }
+
+        public byte[] Repair(IEnumerable<byte> rawdata)
+        {
+            BitArray rawBitArray = new BitArray(rawdata.ToArray());
+            byte[] bytes = new byte[rawdata.Count()];
+            Repair(rawBitArray).CopyTo(bytes, 0);
+            return bytes;
+        }
+
+        public BitArray Repair(BitArray rawdata)
+        {
+            var rawFileVerification = GenerateErrorCorrector(rawdata);
+            var result = rawFileVerification.Xor(this.VerificationCode);
+            int index = SumFalseIndices(result.OfType<bool>().ToArray());
+            BitArray fixedData = (BitArray)rawdata.Clone();
+            Console.WriteLine(index);
+            fixedData[index] ^= true;
+            return fixedData;
+        }
+
+        public static int SumFalseIndices(IList<bool> boolArray)
+        {
+            int sum = 0;
+            for (int i = 0; i < boolArray.Count; i++)
+            {
+                if (!boolArray[i])
+                {
+                    sum += (int)Math.Pow(2, i);
+                }
+            }
+            return sum;
         }
         /*
         public static List<bool> ByteArrayToBoolList(IList<byte> byteArray)
