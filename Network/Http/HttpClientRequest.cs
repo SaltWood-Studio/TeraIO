@@ -36,6 +36,8 @@ namespace TeraIO.Network.Http
             return result;
         }
 
+        public void WriteFrom(Stream stream) => stream.CopyTo(this.Response.OutputStream);
+
         public T ParseTo<T>() where T : class
         {
             T? result = JsonConvert.DeserializeObject<T>(this.Text);
