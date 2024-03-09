@@ -10,7 +10,7 @@ namespace TeraIO.Data
 {
     /// <summary>
     /// This class is not recommended to use because it consumes too much memory when validating and generating big data
-    /// 这个类不建议使用，因为其在验证、生成大数据时占用内存过大
+    /// 这个类不建议使用,因为其在验证、生成大数据时占用内存过大
     /// This class is not recommended to use because it consumes too much memory when validating and generating big data
     /// </summary>
     public class ErrorCorrector
@@ -27,7 +27,7 @@ namespace TeraIO.Data
         }
 
         /// <summary>
-        /// 构造函数，接收一个 IList<bool> 作为输入数据
+        /// 构造函数,接收一个 IList<bool> 作为输入数据
         /// </summary>
         public ErrorCorrector(IList<bool> data)
         {
@@ -36,7 +36,7 @@ namespace TeraIO.Data
         }
 
         /// <summary>
-        /// 构造函数，接收一个 IList<byte> 作为输入数据
+        /// 构造函数,接收一个 IList<byte> 作为输入数据
         /// </summary>
         public ErrorCorrector(IList<byte> data)
         {
@@ -45,7 +45,7 @@ namespace TeraIO.Data
         }
 
         /// <summary>
-        /// 构造函数，接收一个 BitArray 作为输入数据
+        /// 构造函数,接收一个 BitArray 作为输入数据
         /// </summary>
         public ErrorCorrector(BitArray data)
         {
@@ -201,43 +201,43 @@ namespace TeraIO.Data
 
         public override string ToString()
         {
-            // 创建一个空的字符串列表，用于存储每6个bool值转换成的二进制字符串
+            // 创建一个空的字符串列表,用于存储每6个bool值转换成的二进制字符串
             List<string> binaryStrings = new List<string>();
 
             // 遍历verificationCode列表中的每个bool值
             for (int i = 0; i < verificationCode.Count; i++)
             {/*
-                // 如果当前索引是6的倍数，则在字符串列表中添加一个空格
+                // 如果当前索引是6的倍数,则在字符串列表中添加一个空格
                 if (i > 0 && i % 6 == 0)
                 {
                     binaryStrings.Add(" ");
                 }*/
 
-                // 将当前bool值转换为二进制字符串，并添加到字符串列表中
+                // 将当前bool值转换为二进制字符串,并添加到字符串列表中
                 binaryStrings.Add(verificationCode[i] ? "1" : "0");
             }
 
-            // 将字符串列表中的所有字符串连接在一起，形成一个完整的字符串
+            // 将字符串列表中的所有字符串连接在一起,形成一个完整的字符串
             string result = string.Join("", binaryStrings);
 
-            // 计算剩余的字符数量，并使用空字符串填充
+            // 计算剩余的字符数量,并使用空字符串填充
             int remainder = result.Length % 6;
             if (remainder > 0)
             {
                 result += new string('0', 6 - remainder);
             }
 
-            // 创建一个新的字符列表，用于存储转换后的Base64编码字符
+            // 创建一个新的字符列表,用于存储转换后的Base64编码字符
             List<char> chars = new List<char>();
 
-            // 遍历转换后的字符串，将其转换为Base64编码字符，并添加到字符列表中
+            // 遍历转换后的字符串,将其转换为Base64编码字符,并添加到字符列表中
             for (int i = 0; i < result.Length; i += 6)
             {
                 int value = Convert.ToInt32(result.Substring(i, 6), 2);
                 chars.Add((char)('A' + value));
             }
 
-            // 将字符列表中的所有字符连接在一起，形成一个完整的Base64编码字符串
+            // 将字符列表中的所有字符连接在一起,形成一个完整的Base64编码字符串
             return new string(chars.ToArray());
         }
     }

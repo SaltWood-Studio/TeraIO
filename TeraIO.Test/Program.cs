@@ -3,6 +3,8 @@ using System.Text;
 using TeraIO;
 using TeraIO.Data;
 using TeraIO.Extension;
+using TeraIO.Network.Http;
+using TeraIO.Runnable;
 
 namespace TeraIO.Test
 {
@@ -10,27 +12,15 @@ namespace TeraIO.Test
     {
         static void Main(string[] args)
         {
-            byte[] data = File.ReadAllBytes("");
-            ErrorCorrector verificator = new ErrorCorrector(data);
-            Console.WriteLine(verificator);
-            Console.WriteLine(verificator.Check(data));
-            BitArray bitArray = new BitArray(data);
-            int position = new Random().Next(0, bitArray.Count);
-            position.Dump();
-            bitArray[position] ^= true;
-            bool[] rawdata = bitArray.OfType<bool>().ToArray();
-            var fixedData = verificator.Repair(TeraHash.BoolArrayToByteArray(rawdata));
-        }
+            string path = "C:/appverifUI.dll";
+            FileInfo file = new FileInfo(path);
+            StreamReader sr = new StreamReader(path);
+            Stream stream = sr.BaseStream;
+            byte[] buffer = new byte[file.Length];
+            stream.Read(buffer, 0, (int)file.Length);
 
-        public static string ToString(BitArray args)
-        {
-            string result = "";
-            foreach (bool j in args)
-            {
-                result += j ? "1" : "0";
-            }
-            result += " ";
-            return result;
+            byte[] result = MD5.ComputeMD5(buffer);
+            Console.WriteLine(Convert.ToHexString(result));
         }
     }
 }

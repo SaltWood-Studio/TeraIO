@@ -6,43 +6,66 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TeraIO.Extension;
+using TeraIO.Runnable;
 
 namespace TeraIO.Network.Http
 {
     /// <summary>
     /// <see cref="HttpServer"/> 返回的 HttpServer 实例。调用 <see cref="HttpServerAppBase.Run"/> 来启动一个简单的 Http 服务器
-    /// 正常情况下，你不应该创建这个类的实例，而是由 <see cref="HttpServer"/> 创建或者通过它的子类来获得它的实例！
+    /// 正常情况下,你不应该创建这个类的实例,而是由 <see cref="HttpServer"/> 创建或者通过它的子类来获得它的实例！
     /// </summary>
-    public class HttpServerAppBase
+    public class HttpServerAppBase : RunnableBase
     {
 
-        public string HOST => "127.0.0.1";
-        public int PORT => 1280;
+        public List<string> UriPrefixes { get; set; }
+        public Dictionary<HttpHandlerAttribute, MethodInfo> methods;
 
-        public List<string> UriPrefixes {  get; set; }
-        CancellationToken cancellationToken;
-        public Dictionary<HttpHandlerFunction, MethodInfo> methods;
+        private HttpListener listener;
 
-        public HttpServerAppBase(Dictionary<HttpHandlerFunction, MethodInfo>? methods = null)
+        public HttpServerAppBase(Dictionary<HttpHandlerAttribute, MethodInfo>? methods = null, ILoggerBuilder? loggerBuilder = null) : base(loggerBuilder)
         {
-            this.cancellationToken = new CancellationToken();
             if (methods == null)
             {
-                this.methods = new Dictionary<HttpHandlerFunction, MethodInfo>();
+                this.methods = new Dictionary<HttpHandlerAttribute, MethodInfo>();
             }
             else
             {
                 this.methods = methods;
             }
             this.UriPrefixes = new List<string>();
+            listener = new HttpListener();
         }
 
-        public void Run()
+        protected void LoadNew()
         {
-            HttpListener listener = new HttpListener();
-            listener.Prefixes.Merge(this.UriPrefixes);
+            Type type = this.GetType();
+
+            // 获取所有被标记为HttpHandlerFunction的方法
+            MethodInfo[] methodInfos = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            Dictionary<HttpHandlerAttribute, MethodInfo> methods = new();
+
+            // 遍历方法数组,检查每个方法是否被标记为HttpHandlerFunction
+            foreach (MethodInfo methodInfo in methodInfos)
+            {
+                HttpHandlerAttribute? attr = Attribute.GetCustomAttribute(methodInfo, typeof(HttpHandlerAttribute)) as HttpHandlerAttribute;
+                ParameterInfo[] parameters = methodInfo.GetParameters();
+                if (attr != null && parameters.Length > 0 && parameters[0].ParameterType == typeof(HttpClientRequest))
+                {
+                    methods.Add(attr, methodInfo);
+                }
+            }
+            this.methods = methods;
+        }
+
+        protected override int Run(string[] args)
+        {
+            int result = 0;
+            this.LoadNew();
+            //listener.Prefixes.Clear();
+            listener.Prefixes.Merge(UriPrefixes);
             listener.Start();
             HandleHttpConnection(listener);
+            return result;
         }
 
         public HttpClientRequest ParseHttpRequest(HttpListenerContext context)
@@ -64,8 +87,7 @@ namespace TeraIO.Network.Http
             while (true)
             {
                 HttpListenerContext context = listener.GetContext();
-                Thread task = new Thread(() => HandleHttpConnectionSingle(context));
-                task.Start();
+                Task task = Task.Run(() => HandleHttpConnectionSingle(context));
             }
         }
 

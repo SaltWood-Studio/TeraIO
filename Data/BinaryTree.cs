@@ -35,18 +35,18 @@ namespace TeraIO.Data
         // 插入数据
         public void Insert(T data)
         {
-            // 如果没有数据，则直接设置数据
+            // 如果没有数据,则直接设置数据
             if (!this.data.HasItem)
             {
                 this.data.SetData(data);
                 return;
             }
-            // 如果数据不为空，则比较数据和当前数据
+            // 如果数据不为空,则比较数据和当前数据
             if (this.data.Value != null)
             {
                 if (this.data.Value.CompareTo(data) > 0)
                 {
-                    // 如果左子树不为空，则插入
+                    // 如果左子树不为空,则插入
                     if (this.left == null)
                     {
                         this.left = new BinaryTree<T>(data);
@@ -58,7 +58,7 @@ namespace TeraIO.Data
                 }
                 else
                 {
-                    // 如果右子树不为空，则插入
+                    // 如果右子树不为空,则插入
                     if (this.right == null)
                     {
                         this.right = new BinaryTree<T>(data);
