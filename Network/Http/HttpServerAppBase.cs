@@ -20,7 +20,7 @@ namespace TeraIO.Network.Http
         public List<string> UriPrefixes { get; set; }
         public Dictionary<HttpHandlerAttribute, MethodInfo> methods;
 
-        private HttpListener listener;
+        protected HttpListener listener;
 
         public HttpServerAppBase(Dictionary<HttpHandlerAttribute, MethodInfo>? methods = null, ILoggerBuilder? loggerBuilder = null) : base(loggerBuilder)
         {
