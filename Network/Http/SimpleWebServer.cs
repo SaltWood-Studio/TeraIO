@@ -19,15 +19,13 @@ namespace CSharpOpenBMCLAPI.Modules.WebServer
     {
         private int Port = 0; // TCP 随机端口  
         private readonly X509Certificate2? _certificate; // SSL证书  
-        private Cluster cluster;
         public readonly List<Route> routes = new();
         private readonly int bufferSize = 8192;
 
-        public SimpleWebServer(int port, X509Certificate2? certificate, Cluster cluster)
+        public SimpleWebServer(int port, X509Certificate2? certificate)
         {
             Port = port;
             _certificate = certificate;
-            this.cluster = cluster;
         }
 
         protected override int Run(string[] args)
@@ -43,7 +41,6 @@ namespace CSharpOpenBMCLAPI.Modules.WebServer
                 catch (Exception ex)
                 {
                     ex.GetType();
-                    Logger.Instance.LogError(ex.ExceptionToDetail());
                     return result;
                 }
             }
@@ -66,7 +63,6 @@ namespace CSharpOpenBMCLAPI.Modules.WebServer
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.LogError(ex.ExceptionToDetail());
                     if (tcpClient != null && tcpClient.Connected)
                     {
                         tcpClient?.Close();
@@ -118,7 +114,7 @@ namespace CSharpOpenBMCLAPI.Modules.WebServer
                     }
                     // 已经判断符合所有条件
 
-                    route.Handler?.Invoke(context, cluster, route.MatchRegex.Match(context.Request.Path));
+                    route.Handler?.Invoke(context, route.MatchRegex.Match(context.Request.Path));
                     break;
                 }
             NextOne: continue;

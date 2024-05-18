@@ -11,7 +11,7 @@ namespace CSharpOpenBMCLAPI.Modules.WebServer
     {
         public required Regex MatchRegex;
         public List<Func<string, bool>> ConditionExpressions = new();
-        public Action<HttpContext, Cluster, Match>? Handler;
+        public Action<HttpContext, Match>? Handler;
         public string Methods
         {
             get => string.Join(' ', this._allowedMethods);
