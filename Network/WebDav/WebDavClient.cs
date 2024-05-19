@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace TeraIO.Network.WebDav
 {
@@ -36,6 +37,17 @@ namespace TeraIO.Network.WebDav
         public async Task<HttpResponseMessage> CreateFolder(string folderName)
         {
             return await this.httpClient.SendAsync(new HttpRequestMessage(new HttpMethod("MKCOL"), folderName));
+        }
+
+        public async Task<bool> Exists(string name)
+        {
+            return (await this.httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, name))).IsSuccessStatusCode;
+        }
+
+        public string GetFileDownloadLink(string filePath)
+        {
+            //TODO: GetFileDownloadLink
+            throw new NotImplementedException("TODO: GetFileDownloadLink");
         }
 
         public async Task<HttpResponseMessage> Delete(string name)
