@@ -6,13 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml.Linq;
+using TeraIO.Runnable;
 
 namespace TeraIO.Network.WebDav
 {
     public class WebDavClient
     {
         protected HttpClient httpClient;
-        public string? lockToken;
 
         public WebDavClient(string baseUrl)
         {
@@ -25,24 +25,24 @@ namespace TeraIO.Network.WebDav
             this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"))}");
         }
 
-        public async Task<HttpResponseMessage> PutFile(string fileName, byte[] data)
+        public async Task<HttpResponseMessage> PutFile(string fileName, byte[] data, WebDavFileLock? fileLock = null)
         {
             HttpContent content = new ByteArrayContent(data);
-            if (!string.IsNullOrWhiteSpace(lockToken))
+            if (!string.IsNullOrWhiteSpace(fileLock?.LockToken))
             {
-                content.Headers.Add("Lock-Token", lockToken);
-                content.Headers.Add("If", $"({lockToken})");
+                content.Headers.Add("Lock-Token", fileLock?.LockToken);
+                content.Headers.Add("If", $"({fileLock?.LockToken})");
             }
             return await this.httpClient.PutAsync(fileName, content);
         }
 
-        public async Task<HttpResponseMessage> PutFile(string fileName, Stream stream)
+        public async Task<HttpResponseMessage> PutFile(string fileName, Stream stream, WebDavFileLock? fileLock = null)
         {
             HttpContent content = new StreamContent(stream);
-            if (!string.IsNullOrWhiteSpace(lockToken))
+            if (!string.IsNullOrWhiteSpace(fileLock?.LockToken))
             {
-                content.Headers.Add("Lock-Token", lockToken);
-                content.Headers.Add("If", $"({lockToken})");
+                content.Headers.Add("Lock-Token", fileLock?.LockToken);
+                content.Headers.Add("If", $"({fileLock?.LockToken})");
             }
             return await this.httpClient.PutAsync(fileName, content);
         }
@@ -142,16 +142,14 @@ namespace TeraIO.Network.WebDav
             return await this.httpClient.DeleteAsync(name);
         }
 
-        public async Task<HttpResponseMessage> Lock(string name, int timeout = 60)
+        public async Task<WebDavFileLock> Lock(string name, int timeout = 60)
         {
-            HttpRequestMessage message = new HttpRequestMessage(new HttpMethod("LOCK"), name)
-            {
-                Content = new StringContent("<D:lockinfo xmlns:D='DAV:'><D:lockscope><D:exclusive/></D:lockscope><D:locktype><D:write/></D:locktype></D:lockinfo>")
-            };
-            message.Headers.Add("Timeout", $"Second-{timeout}");
-            var response = await this.httpClient.SendAsync(message);
-            this.lockToken = response.Headers.GetValues("Lock-Token").First();
-            return response;
+            WebDavFileLock fileLock = new WebDavFileLock(name);
+            fileLock.Client.BaseAddress = this.httpClient.BaseAddress;
+            fileLock.Client.DefaultRequestHeaders.Clear();
+            this.httpClient.DefaultRequestHeaders.ForEach(kvp => fileLock.Client.DefaultRequestHeaders.Add(kvp.Key, kvp.Value));
+            await fileLock.Lock();
+            return fileLock;
         }
 
         public async Task<byte[]> GetFile(string filename)
@@ -164,12 +162,9 @@ namespace TeraIO.Network.WebDav
             return await (await this.httpClient.GetAsync(filename)).Content.ReadAsStreamAsync();
         }
 
-        public async Task<HttpResponseMessage> Unlock(string name)
+        public async Task Unlock(WebDavFileLock fileLock)
         {
-            HttpRequestMessage message = new HttpRequestMessage(new HttpMethod("UNLOCK"), name);
-            message.Headers.Add("Lock-Token", this.lockToken);
-            this.lockToken = null;
-            return await this.httpClient.SendAsync(message);
+            await fileLock.Unlock();
         }
     }
 }

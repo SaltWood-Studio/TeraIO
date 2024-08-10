@@ -18,14 +18,18 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Compression\**" />
+	  <Compile Remove="Minecraft\**" />
 	  <Compile Remove="TeraIO.Test\**" />
+	  <EmbeddedResource Remove="Compression\**" />
+	  <EmbeddedResource Remove="Minecraft\**" />
 	  <EmbeddedResource Remove="TeraIO.Test\**" />
+	  <None Remove="Compression\**" />
+	  <None Remove="Minecraft\**" />
 	  <None Remove="TeraIO.Test\**" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Compression\" />
-		<Folder Include="Minecraft\" />
 		<Folder Include=".github\" />
 	</ItemGroup>
 
