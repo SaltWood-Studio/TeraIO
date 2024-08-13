@@ -24,6 +24,7 @@ public class RsaStream : Stream
     protected object _lock = new object();
     protected object _statusLock = new object();
     private RsaStreamStatus _status;
+    private byte[] pendingBytes = Array.Empty<byte>();
 
     public RsaStreamStatus Status
     {
@@ -111,11 +112,13 @@ public class RsaStream : Stream
     {
         lock (_lock)
         {
-
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             // The max block size depends on the key size and padding. With OAEP and SHA-256, it's approximately: KeySize/8 - 2*HashSize - 2
             int maxBlockSize = _remotePublicKey!.KeySize / 8 - 2 * 32 - 2;
+
+            long messageLength = count;
+            _stream.Write(BitConverter.GetBytes(messageLength));
 
             using (var cryptoStream = new MemoryStream())
             {
@@ -140,6 +143,12 @@ public class RsaStream : Stream
     {
         lock (_lock)
         {
+            if (this.pendingBytes != null && this.pendingBytes.Length != 0)
+            {
+                (byte[] temp, this.pendingBytes) = (this.pendingBytes[0..count], this.pendingBytes[count..]);
+                Array.Copy(temp, 0, buffer, offset, count);
+            }
+
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
             if (offset < 0 || count < 0) throw new ArgumentOutOfRangeException("Offset and count must be non-negative.");
             if (buffer.Length - offset < count) throw new ArgumentException("Invalid offset and count relative to buffer length.");
@@ -152,12 +161,20 @@ public class RsaStream : Stream
                 byte[] encryptedBuffer = new byte[encryptedBlockSize];
                 int bytesRead;
 
+                byte[] decryptedBlock = Array.Empty<byte>();
+
+                byte[] messageLengthByte = new byte[8];
+                if (_stream.Read(messageLengthByte) < 8) throw new Exception("Unable to read message length.");
+                long messageLength = BitConverter.ToInt64(messageLengthByte);
+                byte[] restBytes = new byte[Math.Max(0, messageLength - count)];
+                long actualSize = Math.Min(messageLength, count);
+
                 while ((bytesRead = _stream.Read(encryptedBuffer, 0, encryptedBlockSize)) > 0)
                 {
                     if (bytesRead != encryptedBlockSize)
                         throw new CryptographicException("The length of the data to decrypt is not valid for the size of this key.");
 
-                    byte[] decryptedBlock = _rsaPrivate.Decrypt(encryptedBuffer, RSAEncryptionPadding.OaepSHA256);
+                    decryptedBlock = _rsaPrivate.Decrypt(encryptedBuffer, RSAEncryptionPadding.OaepSHA256);
 
                     if (decryptedBlock.Length > 0)
                     {
@@ -166,9 +183,19 @@ public class RsaStream : Stream
                         totalBytesRead += copySize;
                     }
 
-                    if (totalBytesRead >= count)
+                    if (totalBytesRead >= actualSize)
                         break;
                 }
+                if (totalBytesRead > actualSize)
+                {
+                    this.pendingBytes = new byte[totalBytesRead - actualSize];
+                    Array.Copy(decryptedBlock[0..(int)(totalBytesRead - actualSize)], this.pendingBytes, (totalBytesRead - actualSize));
+                }
+                if (totalBytesRead < actualSize &&
+                    restBytes.Length != 0 &&
+                    _stream.Read(restBytes, 0, restBytes.Length) != restBytes.Length)
+                    throw new Exception("Message length doesn't match.");
+                this.pendingBytes = restBytes;
 
                 return totalBytesRead;
             }
