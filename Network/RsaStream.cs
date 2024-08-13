@@ -90,7 +90,7 @@ public class RsaStream : Stream, IDisposable
         if (signature != null && GetRsaFingerprint(_remotePublicKey) != signature)
         {
             this.Status = RsaStreamStatus.AuthenticationFailed;
-            throw new Exception($"Remote signature doen't match: expected \"{signature}\", but \"{GetRsaFingerprint(_remotePublicKey)}\" found.");
+            throw new Exception($"Remote fingerprint doen't match: expected \"{signature}\", but \"{GetRsaFingerprint(_remotePublicKey)}\" found.");
         }
 
         // Test encryption/decryption
@@ -262,6 +262,6 @@ public class RsaStream : Stream, IDisposable
     #endregion
 
     #region Static Methods
-    public static string GetRsaFingerprint(RSA rsa) => $"SHA256:{Convert.ToHexString(SHA256.HashData(rsa.ExportRSAPublicKey())).ToLower()}";
+    public static string GetRsaFingerprint(RSA rsa) => $"SHA256:{Convert.ToBase64String(SHA256.HashData(rsa.ExportRSAPublicKey())).ToLower()}";
     #endregion
 }
