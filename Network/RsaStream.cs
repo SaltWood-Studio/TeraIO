@@ -147,7 +147,7 @@ public class RsaStream : Stream, IDisposable
             {
                 int actualSize = Math.Min(this.pendingBytes.Length, count);
                 (byte[] temp, this.pendingBytes) = (this.pendingBytes[0..actualSize], this.pendingBytes[actualSize..]);
-                Array.Copy(temp, 0, buffer, offset, count);
+                Array.Copy(temp, 0, buffer, offset, actualSize);
                 return actualSize;
             }
 
