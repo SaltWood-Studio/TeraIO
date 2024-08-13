@@ -12,6 +12,7 @@ namespace TeraIO.Network
         Handshaking,
         Established,
         Closed,
+        Disposed,
         Failed = 100,
         AuthenticationFailed = 101,
         ProtocolVersionMismatch = 102

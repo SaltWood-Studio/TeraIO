@@ -13,7 +13,7 @@ using System.IO;
 
 namespace TeraIO.Network;
 
-public class RsaStream : Stream
+public class RsaStream : Stream, IDisposable
 {
     protected readonly Stream _stream;
     protected RSA _rsaPrivate;
@@ -224,5 +224,18 @@ public class RsaStream : Stream
         this.Status = RsaStreamStatus.Closed;
     }
 
+    #endregion
+
+    #region IDisposable Overrides
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        if (disposing)
+        {
+            this.Close();
+            _stream.Dispose();
+            this.Status = RsaStreamStatus.Disposed;
+        }
+    }
     #endregion
 }
