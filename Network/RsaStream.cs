@@ -70,6 +70,8 @@ public class RsaStream : Stream, IDisposable
         this.PrivateKey = RSA.Create(rsaKeyLength);
     }
 #pragma warning restore CS8618
+    
+    public void Handshake() => Handshake(null);
 
     public void Handshake(string? signature = null)
     {
