@@ -7,15 +7,14 @@ using System.Net;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
-using TeraIO.Runnable;
-using System.Text.RegularExpressions;
 using TeraIO.Extension;
+using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using System.Diagnostics;
 
 namespace CSharpOpenBMCLAPI.Modules.WebServer
 {
-    public class SimpleWebServer : RunnableBase
+    public class SimpleWebServer
     {
         private int Port = 0; // TCP 随机端口  
         private readonly X509Certificate2? _certificate; // SSL证书  
@@ -28,7 +27,7 @@ namespace CSharpOpenBMCLAPI.Modules.WebServer
             _certificate = certificate;
         }
 
-        protected override int Run(string[] args)
+        protected int Run(string[] args)
         {
             while (true)
             {
@@ -61,7 +60,7 @@ namespace CSharpOpenBMCLAPI.Modules.WebServer
                     tcpClient = await listener.AcceptTcpClientAsync();
                     _ = Task.Run(() => HandleRequest(tcpClient));
                 }
-                catch (Exception ex)
+                catch
                 {
                     if (tcpClient != null && tcpClient.Connected)
                     {
@@ -144,7 +143,7 @@ namespace CSharpOpenBMCLAPI.Modules.WebServer
 
         private static void PrintArrayBytes(byte[][] bytes)
         {
-            bytes.ForEach(e => PrintBytes(e));
+            bytes.ForEach(PrintBytes);
         }
 
         private static string ByteToString(byte hex)

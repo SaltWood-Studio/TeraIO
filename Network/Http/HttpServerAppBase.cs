@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TeraIO.Extension;
-using TeraIO.Runnable;
 
 namespace TeraIO.Network.Http
 {
@@ -14,7 +13,7 @@ namespace TeraIO.Network.Http
     /// <see cref="HttpServer"/> 返回的 HttpServer 实例。调用 <see cref="HttpServerAppBase.Run"/> 来启动一个简单的 Http 服务器
     /// 正常情况下,你不应该创建这个类的实例,而是由 <see cref="HttpServer"/> 创建或者通过它的子类来获得它的实例！
     /// </summary>
-    public class HttpServerAppBase : RunnableBase
+    public class HttpServerAppBase
     {
 
         public List<string> UriPrefixes { get; set; }
@@ -22,7 +21,7 @@ namespace TeraIO.Network.Http
 
         protected HttpListener listener;
 
-        public HttpServerAppBase(Dictionary<HttpHandlerAttribute, MethodInfo>? methods = null, ILoggerBuilder? loggerBuilder = null) : base(loggerBuilder)
+        public HttpServerAppBase(Dictionary<HttpHandlerAttribute, MethodInfo>? methods = null) : base()
         {
             if (methods == null)
             {
@@ -57,7 +56,7 @@ namespace TeraIO.Network.Http
             this.methods = methods;
         }
 
-        protected override int Run(string[] args)
+        protected int Run(string[] args)
         {
             int result = 0;
             this.LoadNew();

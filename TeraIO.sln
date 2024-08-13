@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.34316.72
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeraIO", "TeraIO.csproj", "{34DE7DD8-F748-4DA8-BCAE-97EFE196FFAF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeraIO.Test", "TeraIO.Test\TeraIO.Test.csproj", "{87CE782C-CE36-4EC1-B54D-F808B374770D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeraIO.Test", "TeraIO.Test\TeraIO.Test.csproj", "{B02199A1-E3F5-4990-A15C-070399CD8698}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{34DE7DD8-F748-4DA8-BCAE-97EFE196FFAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34DE7DD8-F748-4DA8-BCAE-97EFE196FFAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34DE7DD8-F748-4DA8-BCAE-97EFE196FFAF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{87CE782C-CE36-4EC1-B54D-F808B374770D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{87CE782C-CE36-4EC1-B54D-F808B374770D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{87CE782C-CE36-4EC1-B54D-F808B374770D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{87CE782C-CE36-4EC1-B54D-F808B374770D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B02199A1-E3F5-4990-A15C-070399CD8698}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B02199A1-E3F5-4990-A15C-070399CD8698}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B02199A1-E3F5-4990-A15C-070399CD8698}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B02199A1-E3F5-4990-A15C-070399CD8698}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

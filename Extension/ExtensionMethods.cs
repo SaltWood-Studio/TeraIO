@@ -30,5 +30,13 @@ namespace TeraIO.Extension
                 left.Add(item);
             }
         }
+
+        public static void ForEach<T>(this IEnumerable<T> values, Action<T> action)
+        {
+            foreach (T item in values)
+            {
+                action(item);
+            }
+        }
     }
 }
