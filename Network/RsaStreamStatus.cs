@@ -13,6 +13,7 @@ namespace TeraIO.Network
         Established,
         Closed,
         Failed = 100,
-        AuthenticationFailed = 101
+        AuthenticationFailed = 101,
+        ProtocolVersionMismatch = 102
     }
 }

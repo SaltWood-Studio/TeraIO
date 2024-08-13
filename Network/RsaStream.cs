@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using System;
 using System.IO;
 
+namespace TeraIO.Network;
+
 public class RsaStream : Stream
 {
     protected readonly Stream _stream;
@@ -19,6 +21,27 @@ public class RsaStream : Stream
     protected RSAParameters _publicKey;
     protected RSA? _remotePublicKey;
     protected ushort _protocolVersion = 1;
+    protected object _lock = new object();
+    protected object _statusLock = new object();
+    private RsaStreamStatus _status;
+
+    public RsaStreamStatus Status
+    {
+        get
+        {
+            lock (_statusLock)
+            {
+                return _status;
+            }
+        }
+        set
+        {
+            lock (_statusLock)
+            {
+                _status = value;
+            }
+        }
+    }
 
     public RsaStream(Stream stream)
     {
@@ -35,6 +58,7 @@ public class RsaStream : Stream
 
     public void Handshake()
     {
+        this.Status = RsaStreamStatus.Handshaking;
         // Send public key
         byte[] publicKeyBytes = _rsaPublic.ExportRSAPublicKey();
         _stream.Write(publicKeyBytes, 0, publicKeyBytes.Length);
@@ -69,69 +93,85 @@ public class RsaStream : Stream
         // Receive protocol version
         byte[] remoteVersionBytes = new byte[2];
         int versionLength = _stream.Read(remoteVersionBytes, 0, remoteVersionBytes.Length);
-        if (versionLength == 0) throw new IOException("Failed to read remote protocol version.");
+        if (versionLength == 0)
+        {
+            this.Status = RsaStreamStatus.Failed;
+            throw new IOException("Failed to read remote protocol version.");
+        }
         ushort remoteVersion = BitConverter.ToUInt16(remoteVersionBytes);
-        if (remoteVersion != _protocolVersion) throw new InvalidOperationException("Protocol version mismatch.");
+        if (remoteVersion != _protocolVersion)
+        {
+            this.Status = RsaStreamStatus.ProtocolVersionMismatch;
+            throw new InvalidOperationException("Protocol version mismatch.");
+        }
+        this.Status = RsaStreamStatus.Established;
     }
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        if (buffer == null) throw new ArgumentNullException(nameof(buffer));
-
-        // The max block size depends on the key size and padding. With OAEP and SHA-256, it's approximately: KeySize/8 - 2*HashSize - 2
-        int maxBlockSize = _remotePublicKey!.KeySize / 8 - 2 * 32 - 2;
-
-        using (var cryptoStream = new MemoryStream())
+        lock (_lock)
         {
-            for (int i = offset; i < offset + count; i += maxBlockSize)
+
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+
+            // The max block size depends on the key size and padding. With OAEP and SHA-256, it's approximately: KeySize/8 - 2*HashSize - 2
+            int maxBlockSize = _remotePublicKey!.KeySize / 8 - 2 * 32 - 2;
+
+            using (var cryptoStream = new MemoryStream())
             {
-                int blockSize = Math.Min(maxBlockSize, count - (i - offset));
-                byte[] block = new byte[blockSize];
-                Array.Copy(buffer, i, block, 0, blockSize);
+                for (int i = offset; i < offset + count; i += maxBlockSize)
+                {
+                    int blockSize = Math.Min(maxBlockSize, count - (i - offset));
+                    byte[] block = new byte[blockSize];
+                    Array.Copy(buffer, i, block, 0, blockSize);
 
-                byte[] encryptedBlock = _remotePublicKey.Encrypt(block, RSAEncryptionPadding.OaepSHA256);
-                cryptoStream.Write(encryptedBlock, 0, encryptedBlock.Length);
+                    byte[] encryptedBlock = _remotePublicKey.Encrypt(block, RSAEncryptionPadding.OaepSHA256);
+                    cryptoStream.Write(encryptedBlock, 0, encryptedBlock.Length);
+                }
+
+                _stream.Write(cryptoStream.ToArray(), 0, (int)cryptoStream.Length);
+                _stream.Flush();
             }
-
-            _stream.Write(cryptoStream.ToArray(), 0, (int)cryptoStream.Length);
-            _stream.Flush();
         }
     }
 
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (buffer == null) throw new ArgumentNullException(nameof(buffer));
-        if (offset < 0 || count < 0) throw new ArgumentOutOfRangeException("Offset and count must be non-negative.");
-        if (buffer.Length - offset < count) throw new ArgumentException("Invalid offset and count relative to buffer length.");
-
-        using (var cryptoStream = new MemoryStream())
+        lock (_lock)
         {
-            int totalBytesRead = 0;
-            int encryptedBlockSize = _rsaPrivate.KeySize / 8; // Each encrypted block's size should be equal to the RSA key size in bytes
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (offset < 0 || count < 0) throw new ArgumentOutOfRangeException("Offset and count must be non-negative.");
+            if (buffer.Length - offset < count) throw new ArgumentException("Invalid offset and count relative to buffer length.");
 
-            byte[] encryptedBuffer = new byte[encryptedBlockSize];
-            int bytesRead;
-
-            while ((bytesRead = _stream.Read(encryptedBuffer, 0, encryptedBlockSize)) > 0)
+            using (var cryptoStream = new MemoryStream())
             {
-                if (bytesRead != encryptedBlockSize)
-                    throw new CryptographicException("The length of the data to decrypt is not valid for the size of this key.");
+                int totalBytesRead = 0;
+                int encryptedBlockSize = _rsaPrivate.KeySize / 8; // Each encrypted block's size should be equal to the RSA key size in bytes
 
-                byte[] decryptedBlock = _rsaPrivate.Decrypt(encryptedBuffer, RSAEncryptionPadding.OaepSHA256);
+                byte[] encryptedBuffer = new byte[encryptedBlockSize];
+                int bytesRead;
 
-                if (decryptedBlock.Length > 0)
+                while ((bytesRead = _stream.Read(encryptedBuffer, 0, encryptedBlockSize)) > 0)
                 {
-                    int copySize = Math.Min(decryptedBlock.Length, count - totalBytesRead);
-                    Array.Copy(decryptedBlock, 0, buffer, offset + totalBytesRead, copySize);
-                    totalBytesRead += copySize;
+                    if (bytesRead != encryptedBlockSize)
+                        throw new CryptographicException("The length of the data to decrypt is not valid for the size of this key.");
+
+                    byte[] decryptedBlock = _rsaPrivate.Decrypt(encryptedBuffer, RSAEncryptionPadding.OaepSHA256);
+
+                    if (decryptedBlock.Length > 0)
+                    {
+                        int copySize = Math.Min(decryptedBlock.Length, count - totalBytesRead);
+                        Array.Copy(decryptedBlock, 0, buffer, offset + totalBytesRead, copySize);
+                        totalBytesRead += copySize;
+                    }
+
+                    if (totalBytesRead >= count)
+                        break;
                 }
 
-                if (totalBytesRead >= count)
-                    break;
+                return totalBytesRead;
             }
-
-            return totalBytesRead;
         }
     }
 
@@ -150,6 +190,12 @@ public class RsaStream : Stream
     public override void Flush() => _stream.Flush();
     public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
     public override void SetLength(long value) => _stream.SetLength(value);
+
+    public override void Close()
+    {
+        _stream.Close();
+        this.Status = RsaStreamStatus.Closed;
+    }
 
     #endregion
 }
