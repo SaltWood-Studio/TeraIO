@@ -145,8 +145,10 @@ public class RsaStream : Stream, IDisposable
         {
             if (this.pendingBytes != null && this.pendingBytes.Length != 0)
             {
-                (byte[] temp, this.pendingBytes) = (this.pendingBytes[0..count], this.pendingBytes[count..]);
+                int actualSize = Math.Min(this.pendingBytes.Length, count);
+                (byte[] temp, this.pendingBytes) = (this.pendingBytes[0..actualSize], this.pendingBytes[actualSize..]);
                 Array.Copy(temp, 0, buffer, offset, count);
+                return actualSize;
             }
 
             if (buffer == null) throw new ArgumentNullException(nameof(buffer));
@@ -168,6 +170,7 @@ public class RsaStream : Stream, IDisposable
                 long messageLength = BitConverter.ToInt64(messageLengthByte);
                 byte[] restBytes = new byte[Math.Max(0, messageLength - count)];
                 long actualSize = Math.Min(messageLength, count);
+                int copySize = 0;
 
                 while ((bytesRead = _stream.Read(encryptedBuffer, 0, encryptedBlockSize)) > 0)
                 {
@@ -178,9 +181,9 @@ public class RsaStream : Stream, IDisposable
 
                     if (decryptedBlock.Length > 0)
                     {
-                        int copySize = Math.Min(decryptedBlock.Length, count - totalBytesRead);
+                        copySize = Math.Min(decryptedBlock.Length, count - totalBytesRead);
                         Array.Copy(decryptedBlock, 0, buffer, offset + totalBytesRead, copySize);
-                        totalBytesRead += copySize;
+                        totalBytesRead += decryptedBlock.Length;
                     }
 
                     if (totalBytesRead >= actualSize)
@@ -188,8 +191,7 @@ public class RsaStream : Stream, IDisposable
                 }
                 if (totalBytesRead > actualSize)
                 {
-                    this.pendingBytes = new byte[totalBytesRead - actualSize];
-                    Array.Copy(decryptedBlock[0..(int)(totalBytesRead - actualSize)], this.pendingBytes, (totalBytesRead - actualSize));
+                    Array.Copy(decryptedBlock[copySize..(int)(copySize + totalBytesRead - actualSize)], restBytes, (totalBytesRead - actualSize));
                 }
                 if (totalBytesRead < actualSize &&
                     restBytes.Length != 0 &&
